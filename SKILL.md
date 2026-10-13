@@ -36,6 +36,7 @@ description: >-
 所以注册的是 `./skills/vsl-synchron-player/plugin`（目录里放 `index.ts`）。改完配置会自动热重载。
 
 **用户习惯**见 `references/user-habits.md`（例如：**CC58 切技法，每 8 个值一档**）——生成预设默认遵循。
+（该文件为**个人配置，已 gitignore，不随仓库发布**；新环境需自建。）
 
 ---
 
@@ -144,7 +145,7 @@ scripts\verify-patch-paths.ps1 -Preset <x.vsynpreset> -Database data\vsl-patches
 
 ## 7. 参考与示例
 
-- `references/user-habits.md` —— 用户习惯（CC58 每 8 值一档切技法等），生成时默认遵循
+- `references/user-habits.md` —— **个人习惯（不入库）**：CC58 每 8 值一档切技法、家族前缀命名（STR/BRS/WW/PERC/ETH）等，生成时默认遵循
 - `references/VSL-root-slot-换patch-完全指南.md` —— 完整方法/语法/字段字典/坑（中文长文档）
 - `examples/strings-pro-map.json` —— 上面 5 声部的 map 配置示例（含低音 LyV→molto Vib 处理）
 - 其它库的乐器代码不统一（Elite `vi1/vi2/va/vc/db`、Dimension `vi/va/vc/db`、Brass `tp1/ho1/…`），

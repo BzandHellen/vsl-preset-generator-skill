@@ -6,6 +6,9 @@
 data/*
 !data/README.md
 
+# personal habits / preferences — local only
+references/user-habits.md
+
 # local outputs
 generated/
 *.tmp
