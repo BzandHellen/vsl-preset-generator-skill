@@ -1,0 +1,13 @@
+# generated / machine-specific — rebuild, not committed
+#
+# `data/` holds a database extracted from the locally installed (licensed) VSL libraries.
+# It is regenerable and machine-specific, so it is not published here. Rebuild with:
+#   powershell -ExecutionPolicy Bypass -File scripts/build-vsl-patch-db.ps1 -LibraryRoot "D:\VSL Library"
+data/*
+!data/README.md
+
+# local outputs
+generated/
+*.tmp
+*.tmp.json
+*.log

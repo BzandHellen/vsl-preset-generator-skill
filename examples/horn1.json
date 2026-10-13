@@ -1,0 +1,27 @@
+{
+  "name": "Horn 1 - Legato Long Marcato Rips",
+  "currentPreset": "Generated/Horn 1 - Legato Long Marcato Rips",
+  "switchControl": 260,
+  "patches": [
+    {
+      "title": "Legato",
+      "patchEntry": "vol://at.co.vsl.sy.brass.ho1:public/patches/21 Synchron Brass/11 Horn 1/02 Legato/01 HO1 Legato.vsynpatch",
+      "patchName": "01 HO1 Legato"
+    },
+    {
+      "title": "Long",
+      "patchEntry": "vol://at.co.vsl.sy.brass.ho1:public/patches/21 Synchron Brass/11 Horn 1/01 Short and Long/11 HO1 Long.vsynpatch",
+      "patchName": "11 HO1 Long"
+    },
+    {
+      "title": "Marcato",
+      "patchEntry": "vol://at.co.vsl.sy.brass.ho1:public/patches/21 Synchron Brass/11 Horn 1/02 Legato/21 HO1 Legato AT-marcato.vsynpatch",
+      "patchName": "21 HO1 Legato AT-marcato"
+    },
+    {
+      "title": "Rips",
+      "patchEntry": "vol://at.co.vsl.sy.brass.ho1:public/patches/21 Synchron Brass/11 Horn 1/04 Repetitions and Phrases/41 HO1 Rips.vsynpatch",
+      "patchName": "41 HO1 Rips"
+    }
+  ]
+}
