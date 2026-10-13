@@ -9,8 +9,19 @@
  */
 import { Plugin } from "@opencode/plugin"
 import { execFile } from "node:child_process"
+import { existsSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 
-const SKILL = "C:\\Users\\Administrator\\.config\\opencode\\skills\\vsl-synchron-player"
+// Locate this skill's own directory: prefer the plugin's own location (works directly or via the
+// junction in the harness skills dir), otherwise fall back to the known paths.
+const SKILL = (() => {
+  const cands: string[] = []
+  try { cands.push(fileURLToPath(new URL("..", import.meta.url)).replace(/[\\/]+$/, "")) } catch {}
+  cands.push("C:\\Agent Program Files\\Skills\\vsl-synchron-player")
+  cands.push("C:\\Users\\Administrator\\.config\\opencode\\skills\\vsl-synchron-player")
+  for (const c of cands) if (existsSync(c + "\\scripts\\build-vsl-patch-db.ps1")) return c
+  return cands[0]
+})()
 const SCRIPTS = SKILL + "\\scripts\\"
 const DATA = SKILL + "\\data"
 const DB = DATA + "\\vsl-patches.csv"

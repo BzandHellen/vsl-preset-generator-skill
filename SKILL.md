@@ -13,7 +13,9 @@ description: >-
 本机环境：库在 `D:\VSL Library`，玩家数据在 `C:\ProgramData\VSL\Vienna Synchron Player`，
 用户预设在 `C:\Users\Administrator\Documents\VSL\Vienna Synchron Player\Presets`。
 
-**本 skill 目录 = 这份文件所在目录**（已安装到全局 `~/.config/opencode/skills/vsl-synchron-player/`），
+**本 skill 目录 = 这份文件所在目录**。它存放在本地 skill 仓库
+`C:\Agent Program Files\Skills\vsl-synchron-player`，并**软链（junction）**到 harness 目录
+`C:\Users\Administrator\.config\opencode\skills\vsl-synchron-player` 供 OpenCode 使用。
 相对路径都相对它：`scripts/`（脚本）、`data/`（数据库）、`references/`（文档）、`examples/`（示例）、`plugin/`（工具插件）。
 
 ### 已注册的工具（OpenChamber / Code Mode 可直接调用）
