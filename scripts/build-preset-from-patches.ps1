@@ -96,6 +96,13 @@ foreach ($p in $spec.patches) {
   $c.title      = $p.title
   $c.isCustomTitle = $true
   $c.enabled    = $true
+  if ($p.params) {                       # optional per-slot parameter overrides
+    foreach ($k in $p.params.PSObject.Properties.Name) {
+      if (($c.PSObject.Properties.Name -contains 'parameters') -and ($c.parameters.PSObject.Properties.Name -contains $k)) { $c.parameters.$k = $p.params.$k }
+      elseif ($c.PSObject.Properties.Name -contains $k) { $c.$k = $p.params.$k }
+      else { $c | Add-Member -NotePropertyName $k -NotePropertyValue $p.params.$k }
+    }
+  }
   $c.PSObject.Properties.Remove('rangeFrom')
   $c.PSObject.Properties.Remove('rangeTo')
   if ($p.range) {

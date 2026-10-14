@@ -134,7 +134,14 @@ foreach ($op in @($ops | Where-Object { $_.op -ne 'setController' })) {
       $kids = @($n.nodes).Count
       $arr = @()
       if ($op.explicit) {
-        foreach ($pair in $op.explicit) { $arr += [pscustomobject]@{ fadeInStart=([double]$pair[0]/127); fadeInEnd=([double]$pair[0]/127); fadeOutStart=([double]$pair[1]/127); fadeOutEnd=([double]$pair[1]/127) } }
+        foreach ($pair in $op.explicit) {
+          $q = @($pair)
+          if ($q.Count -ge 4) {
+            $arr += [pscustomobject]@{ fadeInStart=([double]$q[0]/127); fadeInEnd=([double]$q[1]/127); fadeOutStart=([double]$q[2]/127); fadeOutEnd=([double]$q[3]/127) }
+          } else {
+            $arr += [pscustomobject]@{ fadeInStart=([double]$q[0]/127); fadeInEnd=([double]$q[0]/127); fadeOutStart=([double]$q[1]/127); fadeOutEnd=([double]$q[1]/127) }
+          }
+        }
       } else {
         $steps = if ($op.steps) { [int]$op.steps } else { 8 }
         for ($i=0; $i -lt $kids; $i++) {
