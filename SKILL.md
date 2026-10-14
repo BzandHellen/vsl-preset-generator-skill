@@ -33,7 +33,7 @@ description: >-
 | `vsl_export_preset` | 把 `.vsynpreset` 解成 JSON（单个/多个/整目录） |
 | `vsl_outline_preset` | 打印完整维度树（folder/patch、switchControl+槽位、parallel、xfade→CC、range、velXFadeMode…） |
 | `vsl_compare_presets` | 多份预设逐节点对比（缩写归一成 `@`），查跨声部不一致 |
-| `vsl_edit_preset` | 就地改字段再写新文件（`setField` / `setPatch` / `setXfades`（如 8 值一档）/ `removeSlot` / `setController`） |
+| `vsl_edit_preset` | 改字段写新文件：`setField` / `setPatch` / `setXfades`（8 值一档）/ `removeSlot` / `setController` / **成套修复** `mapSection` `fillSlots` `fixCrossSection` `syncFromPresets` `syncAllSections`（`report:true` 只报告不写） |
 | `vsl_controller_map` | 读控制器映射：Dim.Ctrl A–H（`nodeXFade0..7`）与自动化 destination → source |
 | `vsl_scan_presets` | 扫一个目录出总报告：槽数、各维度 Dim.Ctrl 来源、异常（空槽 / 缺音域 / 重复 patch / 跨声部指错） |
 

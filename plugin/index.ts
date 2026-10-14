@@ -304,7 +304,9 @@ export default Plugin.define({
         name: "edit_preset",
         description:
           "Edit a preset and write a NEW file. Ops: setField / setPatch / setXfades (e.g. 8-value stepping) / " +
-          "removeSlot / setController (midi map: {dimCtrl:'A'..'H' or destination:'nodeXFade0', source:'cc21'|'velocity'|…, range:[0,100]}). " +
+          "removeSlot / setController (midi map) / mapSection / fillSlots / fixCrossSection / syncFromPresets / " +
+          "syncAllSections (section-wise repair from the per-instrument presets). " +
+          "Set report=true to print the planned changes and write nothing. " +
           "Output must be under a Generated/generated folder; existing files are never overwritten unless force=true.",
         input: {
           type: "object",
@@ -314,6 +316,7 @@ export default Plugin.define({
             outDir: { type: "string", description: "must be under a Generated/generated folder" },
             name: { type: "string", description: "output base name (no extension)" },
             force: { type: "boolean" },
+            report: { type: "boolean", description: "preview only: print planned changes, write nothing" },
             allowOutsideGenerated: { type: "boolean" },
           },
           required: ["preset", "edits", "outDir"],
@@ -321,7 +324,7 @@ export default Plugin.define({
         },
         options: { namespace: "vsl", codemode: true },
         execute: async (input) => {
-          const i = input as { preset: string; edits: string; outDir: string; name?: string; force?: boolean; allowOutsideGenerated?: boolean }
+          const i = input as { preset: string; edits: string; outDir: string; name?: string; force?: boolean; report?: boolean; allowOutsideGenerated?: boolean }
           // pass complex JSON via a temp file (safer quoting than an inline argument)
           let editsArg = i.edits
           if (/^\s*[\[{]/.test(editsArg)) {
@@ -332,6 +335,7 @@ export default Plugin.define({
           const args = [...arg("Preset", i.preset), ...arg("Edits", editsArg), ...arg("OutDir", i.outDir)]
           if (i.name) args.push(...arg("Name", i.name))
           if (i.force) args.push("-Force")
+          if (i.report) args.push("-Report")
           if (i.allowOutsideGenerated) args.push("-AllowOutsideGenerated")
           return text(await ps("edit-preset.ps1", args, 180_000))
         },
