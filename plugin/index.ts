@@ -251,7 +251,8 @@ export default Plugin.define({
         name: "outline_preset",
         description:
           "Print a preset's full dimension tree: folder/patch nodes, switchControl (+Dim.Ctrl A–H slot), parallel, " +
-          "child counts, nodeXFades as CC ranges, per-slot patchName / range / velXFadeMode / legatoMode.",
+          "child counts, nodeXFades as CC ranges, per-slot patchName / range / velXFadeMode / legatoMode, " +
+          "and the controller map (paramControl.mappings).",
         input: {
           type: "object",
           properties: {
