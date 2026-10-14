@@ -79,11 +79,15 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
 | `nodes` | 子节点数组（folder 有、patch slot 没有） |
 | `parallel` | 该列子槽是**叠加**（true，如 NV-Vib Leg / Tremolo）还是**互斥**（false） |
 | `subTitle` | `"Articulation"`（顶层）/ `"Sub Technique"`（子层） |
-| `switchControl` | 该维度列绑定的切换控制器编号（0=无）。Strings Pro 顶层 260，子列 257/258/259/0 |
+| `switchControl` | 该维度列绑定的**维度控制器槽位**：`257/258/259/260 = Dim.Ctrl A/B/C/D`，`0`=无。**槽位→控制器类型是播放器里的全局设置**（可以是 CC、力度等），JSON 里**不存 CC 号**。Strings Pro 顶层 = `260`(D)，子列 = `257`(A)/`258`(B)/`259`(C)/`0` |
 | `switchControlSeqChordThresh` / `…SeqResetThresh` | 序进/和弦方式切换时的判定阈值（本库 0.2 / 2.0） |
 | `whiteNoteSwitch` | 是否只用白键当 keyswitch |
 | `useCurrentNodeForRelease` | 释放音是否取当前槽样本 |
 | `targetBpm` | 时间拉伸目标速；**负值（-120）表示该层不参与拉伸/同步** |
+
+> ⚠️ 常见误解：`switchControl` **不是 MIDI CC 号**，也没有 `256+CC` 的编码。
+> `257..260` 只是 A/B/C/D 四个控制器槽位；某个槽位到底绑 CC 几（或力度）由播放器全局设置决定，
+> 所以同一个预设换台机器/换设置，实际切换控制器就可能不同。
 
 ### 3.2 交叉淡化 / 选中
 
