@@ -89,12 +89,20 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
 > 每个槽位实际绑什么（CC 几 / 力度 / 触后 / 弯音轮 / 速度 / 时值 …）写在预设的
 > `paramControl.mappings` 里（`nodeXFade0..7` ↔ Dim.Ctrl A..H），见 §3.6。
 
-### 3.2 交叉淡化 / 选中
+### 3.2 交叉淡化 / 选中（**实测确认**）
 
 | 字段 | 含义 |
 |---|---|
-| `nodeXFades` | 数组，**长度 = 子槽数**；每项 `{fadeInStart,fadeInEnd,fadeOutStart,fadeOutEnd}`（0–1）。第 i 项的 fadeIn 区间 = 第 i-1 项的 fadeOut 区间（交叉淡化区） |
+| `nodeXFades` | 数组，**长度 = 子槽数**；每项 `{fadeInStart,fadeInEnd,fadeOutStart,fadeOutEnd}`（归一化 0–1）。相邻槽**共享同一段区间**（第 i 项的 fadeIn 区间 = 第 i-1 项的 fadeOut 区间） |
 | `currentNodeIndex` | 当前选中位置：`n+0.5` = 第 n 槽正中；带小数 = 停在淡化区中间 |
+| `parallel` | `false`（默认）= **单极硬切换**：控制器只"选一个槽"，而且**在按下那一刻决定**，按住期间再拉控制器也不变。<br>`true` = **渐变 / 叠加**：必须在播放器里**手动勾 parallel** 才会交叉淡化。 |
+
+**切换点规则（3 点实测验证）**：某槽被"选中"的边界 = **该槽 `fadeOutStart..fadeOutEnd` 区间的中点**（换算成 CC）。
+
+- 想让边界落在 `B`：把**前一个槽**的 `fadeOutStart/fadeOutEnd` 设成以 `B` 居中（用 `[B-1, B+1]` 即可，避免播放器的"最小重叠"限制）。
+- 所以"**每 8 值一档**"就是：各边界中点 = 8/16/24…，末档自动延伸到 127。
+  命令：`edit-preset.ps1 -Edits '[{"op":"setXfades","path":[""],"steps":8}]'`。
+- 工厂预设用的是默认曲线（并非 8 等分，Harmonics 那档还跨了大半个范围），所以直接拿它用 CC58 切换会"糊"。
 
 ### 3.3 通用参数 `parameters`（folder 与 patch 都有，子级继承父级）
 

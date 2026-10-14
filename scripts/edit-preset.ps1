@@ -143,15 +143,22 @@ foreach ($op in @($ops | Where-Object { $_.op -ne 'setController' })) {
           }
         }
       } else {
+        # switch mode: put the boundary (= midpoint of the shared fade interval) on multiples of N
+        #   slot i: in = interval(b_i), out = interval(b_i+1);  interval(b) = [b-1, b+1]  (b = 0/127 -> zero width)
         $steps = if ($op.steps) { [int]$op.steps } else { 8 }
+        $bounds = @()
+        for ($i=0; $i -le $kids; $i++) { $bounds += $(if ($i -eq 0) {0} elseif ($i -ge $kids) {127} else {$steps * $i}) }
         for ($i=0; $i -lt $kids; $i++) {
-          $lo = $steps * $i
-          $hi = if ($i -eq $kids-1) { 127 } else { ($steps * ($i+1)) - 1 }
-          $arr += [pscustomobject]@{ fadeInStart=($lo/127.0); fadeInEnd=($lo/127.0); fadeOutStart=($hi/127.0); fadeOutEnd=($hi/127.0) }
+          $bi = $bounds[$i]; $bn = $bounds[$i+1]
+          if ($bi -le 0) { $a0=0; $a1=0 } elseif ($bi -ge 127) { $a0=127; $a1=127 } else { $a0=[Math]::Max(0,$bi-1); $a1=[Math]::Min(127,$bi+1) }
+          if ($bn -le 0) { $c0=0; $c1=0 } elseif ($bn -ge 127) { $c0=127; $c1=127 } else { $c0=[Math]::Max(0,$bn-1); $c1=[Math]::Min(127,$bn+1) }
+          $arr += [pscustomobject]@{ fadeInStart=($a0/127.0); fadeInEnd=($a1/127.0); fadeOutStart=($c0/127.0); fadeOutEnd=($c1/127.0) }
         }
       }
       $n.nodeXFades = $arr
-      $CHANGES.Add("setXfades $($op.path -join '/'): $kids step(s)")
+      $mids = @()
+      foreach ($e in $arr) { $mids += [int][math]::Round((([double]$e.fadeOutStart + [double]$e.fadeOutEnd)/2)*127) }
+      $CHANGES.Add("setXfades $($op.path -join '/'): $kids slot(s), switch points @ " + ($mids -join ','))
     }
     'removeSlot' {
       $n = Get-Path $op.path
