@@ -250,7 +250,7 @@ export default Plugin.define({
       editor.add({
         name: "outline_preset",
         description:
-          "Print a preset's full dimension tree: folder/patch nodes, switchControl (+A–D slot), parallel, " +
+          "Print a preset's full dimension tree: folder/patch nodes, switchControl (+Dim.Ctrl A–H slot), parallel, " +
           "child counts, nodeXFades as CC ranges, per-slot patchName / range / velXFadeMode / legatoMode.",
         input: {
           type: "object",
@@ -302,9 +302,9 @@ export default Plugin.define({
       editor.add({
         name: "edit_preset",
         description:
-          "Edit fields of a preset and write a NEW file: setField / setPatch / setXfades (e.g. 8-value stepping) / " +
-          "removeSlot. Output must be under a Generated/generated folder; existing files are never overwritten " +
-          "unless force=true.",
+          "Edit a preset and write a NEW file. Ops: setField / setPatch / setXfades (e.g. 8-value stepping) / " +
+          "removeSlot / setController (midi map: {dimCtrl:'A'..'H' or destination:'nodeXFade0', source:'cc21'|'velocity'|…, range:[0,100]}). " +
+          "Output must be under a Generated/generated folder; existing files are never overwritten unless force=true.",
         input: {
           type: "object",
           properties: {
@@ -333,6 +333,27 @@ export default Plugin.define({
           if (i.force) args.push("-Force")
           if (i.allowOutsideGenerated) args.push("-AllowOutsideGenerated")
           return text(await ps("edit-preset.ps1", args, 180_000))
+        },
+      })
+
+      editor.add({
+        name: "controller_map",
+        description:
+          "Read a preset's MIDI controller map (paramControl.mappings): Dim.Ctrl A–H (nodeXFade0..7) and automation " +
+          "destinations → source. Sources: ccN | velocity | previousVelocity | pitchBend | speed | duration | " +
+          "aftertouch | aftertouchAlt | none.",
+        input: {
+          type: "object",
+          properties: { preset: { type: "string" }, json: { type: "boolean" } },
+          required: ["preset"],
+          additionalProperties: false,
+        },
+        options: { namespace: "vsl", codemode: true },
+        execute: async (input) => {
+          const i = input as { preset: string; json?: boolean }
+          const args = [...arg("Preset", i.preset)]
+          if (i.json) args.push("-Json")
+          return text(await ps("controller-map.ps1", args, 120_000))
         },
       })
     })

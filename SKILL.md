@@ -33,7 +33,8 @@ description: >-
 | `vsl_export_preset` | 把 `.vsynpreset` 解成 JSON（单个/多个/整目录） |
 | `vsl_outline_preset` | 打印完整维度树（folder/patch、switchControl+槽位、parallel、xfade→CC、range、velXFadeMode…） |
 | `vsl_compare_presets` | 多份预设逐节点对比（缩写归一成 `@`），查跨声部不一致 |
-| `vsl_edit_preset` | 就地改字段再写新文件（`setField` / `setPatch` / `setXfades`（如 8 值一档）/ `removeSlot`） |
+| `vsl_edit_preset` | 就地改字段再写新文件（`setField` / `setPatch` / `setXfades`（如 8 值一档）/ `removeSlot` / `setController`） |
+| `vsl_controller_map` | 读控制器映射：Dim.Ctrl A–H（`nodeXFade0..7`）与自动化 destination → source |
 
 > **写入安全（硬约束）**：所有写盘脚本（generate / build_preset / export / edit）**只允许写到路径中含
 > `Generated`/`generated` 的目录**，且**默认不覆盖已存在文件**（要覆盖须显式 `-Force`）。
@@ -58,6 +59,10 @@ description: >-
   ——换声部就是**替换其中 3 段**：内容卷 ID、乐器文件夹、patch 文件名里的缩写。
 - **`.vsynpreset`** = **一个 zstd 帧**包着预设 JSON（无额外头）。7-Zip **能解压**（不能压缩）。
   预设树在 JSON 里的 `data.custom.sampler.rootNode`。
+- **控制器映射**：完整预设的 `data.custom.paramControl.mappings` 存 destination → source；
+  维度槽位 key 是 `nodeXFade0..7` = **Dim.Ctrl A..H（共 8 个）**，对应 `switchControl = 257 + i`。
+  source 可为 `ccN` / `velocity` / `previousVelocity` / `pitchBend` / `speed` / `duration` / `aftertouch(Alt)` / `none`。
+  （root slot 不含此块。）
 - **`.syvolume`** = `VINv` 魔数 + **明文 JSON 头**（含 `id`/`description`/`volumeRefs`）
   + 一个 **zstd 帧**（内容是该乐器卷的**完整 patch 树**）。
 - patch 树 JSON 形状：

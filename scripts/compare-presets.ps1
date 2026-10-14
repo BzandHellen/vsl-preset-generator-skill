@@ -75,9 +75,26 @@ for ($i=0; $i -lt $maxN; $i++) {
     }
   }
 }
-if ($Json) { @{ presets=$names; diffCount=$diffs.Count; diffs=$diffs } | ConvertTo-Json -Depth 5; return }
+# --- controller mappings (paramControl.mappings = Dim.Ctrl A-H / automation) ---
+$maps = @()
+foreach ($p in $Preset) {
+  $t = Get-PresetText -File $p
+  if ($t -match '"paramControl"') { $maps += ,(((Get-ObjectSlice -Text $t -Key 'paramControl').text | ConvertFrom-Json).mappings) } else { $maps += ,$null }
+}
+$ctrlDiffs = New-Object System.Collections.Generic.List[object]
+$dests = @(); foreach ($m in $maps) { if ($m) { $dests += $m.PSObject.Properties.Name } }
+foreach ($d in ($dests | Select-Object -Unique)) {
+  $vals = foreach ($m in $maps) { if ($m -and ($m.PSObject.Properties.Name -contains $d)) { "$($m.$d.source)" } else { '(none)' } }
+  if (@($vals | Select-Object -Unique).Count -gt 1) { $ctrlDiffs.Add([pscustomobject]@{ destination=$d; perPreset=@($vals) }) }
+}
+
+if ($Json) { @{ presets=$names; diffCount=$diffs.Count; diffs=$diffs; controllerDiffCount=$ctrlDiffs.Count; controllerDiffs=$ctrlDiffs } | ConvertTo-Json -Depth 5; return }
 "presets: $($names -join '  |  ')"
 "nodes per preset: " + (($trees | ForEach-Object { $_.Count }) -join ', ')
-if ($diffs.Count -eq 0) { "NO DIFFERENCES"; return }
-"DIFFERENCES: $($diffs.Count)"
+if ($ctrlDiffs.Count -gt 0) {
+  "CONTROLLER MAP DIFFERENCES: $($ctrlDiffs.Count)"
+  foreach ($c in $ctrlDiffs) { "  {0}: {1}" -f $c.destination, ($c.perPreset -join ' | ') }
+} else { "controller map: identical" }
+if ($diffs.Count -eq 0) { "NO TREE DIFFERENCES"; return }
+"TREE DIFFERENCES: $($diffs.Count)"
 $diffs | ForEach-Object { "  [{0}] vs {1}  {2}: {3}  ->  {4}" -f $_.path,$_.preset,$_.field,$_.ref,$_.got }

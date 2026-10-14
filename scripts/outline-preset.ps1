@@ -52,9 +52,22 @@ function Walk($node, [string]$path, [int]$depth) {
 }
 Walk $root '' 0
 
+# controller map (Dim.Ctrl / automation), if this is a full preset
+$cm = New-Object System.Collections.Generic.List[object]
+if ($text -match '"paramControl"') {
+  $pc = (Get-ObjectSlice -Text $text -Key 'paramControl').text | ConvertFrom-Json
+  if ($pc.mappings) {
+    foreach ($p in $pc.mappings.PSObject.Properties) {
+      $lbl = $p.Name
+      if ($p.Name -match '^nodeXFade(\d+)$') { $i=[int]$Matches[1]; $lbl = "{0} (Dim.Ctrl {1})" -f $p.Name, [char](65+$i) }
+      $cm.Add([pscustomobject]@{ destination=$p.Name; label=$lbl; source="$($p.Value.source)" })
+    }
+  }
+}
+
 if ($Json) {
   if (-not $IncludeEntry) { $rows | ForEach-Object { $_.patchEntry = $null } }
-  @{ preset=$Preset; nodes=$rows } | ConvertTo-Json -Depth 5
+  @{ preset=$Preset; nodes=$rows; controllerMap=$cm } | ConvertTo-Json -Depth 5
   return
 }
 foreach ($r in $rows) {
@@ -68,4 +81,9 @@ foreach ($r in $rows) {
     if ($IncludeEntry) { $ex += " entry='$($r.patchEntry)'" }
     "{0}- {1}  {2}" -f $ind,$r.title,$ex
   }
+}
+if ($cm.Count -gt 0) {
+  ""
+  "controller map (paramControl.mappings):"
+  foreach ($c in $cm) { "  {0,-22} -> {1}" -f $c.label, $c.source }
 }

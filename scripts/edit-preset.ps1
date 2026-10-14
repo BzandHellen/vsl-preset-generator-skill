@@ -35,6 +35,7 @@ $text = Get-PresetText -File $Preset
 $slice = Get-TreeSlice -Text $text
 $root = $slice.text | ConvertFrom-Json
 $ops = if (Test-Path -LiteralPath $Edits) { Get-Content -LiteralPath $Edits -Raw | ConvertFrom-Json } else { $Edits | ConvertFrom-Json }
+$ops = @($ops)
 
 function Get-Path([string[]]$titles) {
   $cur = $root
@@ -47,7 +48,8 @@ function Get-Path([string[]]$titles) {
   return $cur
 }
 
-foreach ($op in @($ops)) {
+# ---- tree ops ----------------------------------------------------------------
+foreach ($op in @($ops | Where-Object { $_.op -ne 'setController' })) {
   switch ($op.op) {
     'setField' {
       $n = Get-Path $op.path
@@ -91,6 +93,35 @@ foreach ($op in @($ops)) {
 }
 
 $newText = Set-TreeSlice -Text $text -Slice $slice -NewObjectText ($root | ConvertTo-Json -Depth 100 -Compress)
+
+# ---- controller ops: setController (paramControl.mappings) --------------------
+$ctrlOps = @($ops | Where-Object { $_.op -eq 'setController' })
+if ($ctrlOps.Count -gt 0) {
+  if ($newText -notmatch '"paramControl"') { throw "this target has no paramControl block (root slots don't carry one)" }
+  $pcSlice = Get-ObjectSlice -Text $newText -Key 'paramControl'
+  $pc = $pcSlice.text | ConvertFrom-Json
+  if (-not $pc.mappings) { $pc | Add-Member -NotePropertyName mappings -NotePropertyValue ([pscustomobject]@{}) }
+  foreach ($op in $ctrlOps) {
+    $dest = $op.destination
+    if (-not $dest -and $op.dimCtrl) {
+      $i = 'ABCDEFGH'.IndexOf(([string]$op.dimCtrl).ToUpper())
+      if ($i -lt 0) { throw "bad dimCtrl '$($op.dimCtrl)' (use A..H)" }
+      $dest = "nodeXFade$i"
+    }
+    if (-not $dest) { throw "setController needs 'destination' or 'dimCtrl'" }
+    if ($pc.mappings.PSObject.Properties.Name -contains $dest) { $entry = $pc.mappings.$dest }
+    else { $entry = New-Object psobject; $pc.mappings | Add-Member -NotePropertyName $dest -NotePropertyValue $entry }
+    function Set-Prop($obj,[string]$name,$value) {
+      if ($obj.PSObject.Properties.Name -contains $name) { $obj.$name = $value } else { $obj | Add-Member -NotePropertyName $name -NotePropertyValue $value }
+    }
+    if ($op.source) { Set-Prop $entry 'source' $op.source }
+    if ($null -ne $op.bipolar) { Set-Prop $entry 'bipolar' $op.bipolar }
+    if ($null -ne $op.curve) { Set-Prop $entry 'curve' $op.curve }
+    if ($op.range) { Set-Prop $entry 'rangeFrom' ([int]$op.range[0]); Set-Prop $entry 'rangeTo' ([int]$op.range[1]) }
+  }
+  $newText = Set-TreeSlice -Text $newText -Slice $pcSlice -NewObjectText ($pc | ConvertTo-Json -Depth 100 -Compress)
+}
+
 $out = Assert-GeneratedDir -OutDir $OutDir -AllowOutsideGenerated:$AllowOutsideGenerated
 New-Item -ItemType Directory -Force $out | Out-Null
 if (-not $Name) { $Name = (Split-Path -LeafBase $Preset) + " (edited)" }
