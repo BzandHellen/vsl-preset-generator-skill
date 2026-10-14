@@ -73,19 +73,22 @@ powershell -ExecutionPolicy Bypass -File scripts/verify-patch-paths.ps1 `
 ## Usage (OpenCode tools)
 
 `plugin/index.ts` registers a `vsl` namespace so an agent (and OpenChamber / Code Mode) can call
-the scripts directly. Register the plugin directory in `opencode.json(c)`:
+the scripts directly. Install it by linking the plugin directory into OpenCode's auto-discovered
+plugins folder:
 
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugins": ["./skills/vsl-synchron-player/plugin"]
-}
+```powershell
+cmd /c mklink /J "$env:USERPROFILE\.config\opencode\plugins\vsl-synchron-player" `
+  "C:\Agent Program Files\Skills\vsl-synchron-player\plugin"
 ```
 
-> The configured plugin path must be a **directory** (pointing directly at a `.ts` file is rejected).
+> Linking it from `opencode.json(c)` `"plugins"` also works, but a stale compiled cache can survive
+> a restart there; the auto-discovered `plugins/` folder reloads reliably. After changing the plugin:
+> `opencode service restart`.
 
 Tools: `vsl_db_build` · `vsl_db_query` · `vsl_read_preset` · `vsl_unpack_volume`
-· `vsl_generate_presets` · `vsl_build_preset` · `vsl_verify_patches`
+· `vsl_generate_presets` · `vsl_build_preset` · `vsl_verify_patches` · `vsl_export_preset`
+· `vsl_outline_preset` · `vsl_compare_presets` · `vsl_edit_preset` · `vsl_controller_map`
+· `vsl_scan_presets`
 
 ## Notes
 

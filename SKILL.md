@@ -42,9 +42,14 @@ description: >-
 > 需要写到别处必须显式 `-AllowOutsideGenerated`（或设 `VSL_ALLOW_OUTSIDE_GENERATED=1`）。
 > 目的：**永不覆盖你手写的预设**。
 
-插件在全局 `~/.config/opencode/opencode.jsonc` 的 `plugins` 里注册。
-⚠️ OpenCode 要求 `plugins` 条目指向**目录**（直接写 `.ts` 文件会被 `configured plugin path must be a directory` 拒绝），
-所以注册的是 `./skills/vsl-synchron-player/plugin`（目录里放 `index.ts`）。改完配置会自动热重载。
+插件注册方式（**推荐：自动发现 + junction**）：
+`~/.config/opencode/plugins/vsl-synchron-player` → junction 到 `C:\Agent Program Files\Skills\vsl-synchron-player\plugin`。
+`plugins/` 目录下的插件会被 OpenCode 自动加载，与 skill 的 junction 做法一致。
+
+> ⚠️ 踩坑记录：用 `opencode.jsonc` 的 `"plugins"` 条目引用 `./skills/vsl-synchron-player/plugin` **能加载**，
+> 但重启后可能仍挂着**旧的编译缓存**（新加的工具不出现）；改用 `~/.config/opencode/plugins/` 自动发现后就正常了。
+> 另外 `plugins` 条目本身要求指向**目录**（直接写 `.ts` 会被 `configured plugin path must be a directory` 拒绝）。
+> 改了插件代码后：`opencode service restart`。
 
 **用户习惯**见 `references/user-habits.md`（例如：**CC58 切技法，每 8 个值一档**）——生成预设默认遵循。
 （该文件为**个人配置，已 gitignore，不随仓库发布**；新环境需自建。）
