@@ -70,7 +70,13 @@ description: >-
   source 可为 `ccN` / `velocity` / `previousVelocity` / `pitchBend` / `speed` / `duration` / `aftertouch(Alt)` / `none`。
   （root slot 不含此块。）
 - **`.syvolume`** = `VINv` 魔数 + **明文 JSON 头**（含 `id`/`description`/`volumeRefs`）
-  + 一个 **zstd 帧**（内容是该乐器卷的**完整 patch 树**）。
+  + 一个 **zstd 帧**（内容是该乐器卷的**完整 patch 树 + 工厂预设名清单**）。
+- **工厂预设本体拿不到**（实测结论）：卷里那个 zstd 帧只是一个**清单**（名字 → 编号；
+  预设与 patch 共用同一编号空间，例如预设 `0..5`、patch 从 `6` 起）。本体在卷的数据区按编号存放，
+  但**不是任何标准压缩帧**——整个卷只有 1 个 zstd 帧，原始字节里也搜不到 `patchEntry` / `nodeXFades` /
+  `vsynpreset` 字样；VE Pro 工程文件（`.vesp64`/`.vecs`）里同样不是明文。
+  → **只能**在播放器里打开工厂预设，右键 `Copy root slot`（或另存 `.vsynpreset`）来导出。
+  诊断脚本：`scripts/scan-volume-frames.ps1`（多压缩格式扫描）。
 - patch 树 JSON 形状：
   `{ patches: { <Collection>: { <Product>: { <乐器文件夹>: { <技法>: { <patch文件>: index } } } } },
      instruments: { at.co.vsl.synchronplayer: { presets: {...} } } }`
