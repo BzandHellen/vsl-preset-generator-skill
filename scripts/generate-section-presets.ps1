@@ -1,4 +1,4 @@
-<#
+﻿<#
   generate-section-presets.ps1
 
   Clone a VSL Synchron Player preset (or root slot) to other instruments by text replacement,
@@ -27,9 +27,13 @@ param(
   [Parameter(Mandatory)][string]$Template,
   [Parameter(Mandatory)][string]$MapFile,
   [string]$OutDir   = ".",
-  [string]$SevenZip = "C:\Program Files\7-Zip\7z.exe"
+  [string]$SevenZip = "C:\Program Files\7-Zip\7z.exe",
+  [switch]$Force,
+  [switch]$AllowOutsideGenerated
 )
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot\vsl-common.ps1"
+$OutDir = Assert-GeneratedDir -OutDir $OutDir -AllowOutsideGenerated:$AllowOutsideGenerated
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 
 function Write-ZstdRaw([byte[]]$data,[string]$path){   # valid zstd frame, raw (uncompressed) blocks
@@ -91,9 +95,11 @@ foreach ($e in $map) {
   $fmt = if ($e.output) { $e.output } else { 'preset' }
   if ($fmt -eq 'json') {
     $out = Join-Path $OutDir ("$($e.name).json")
+    Assert-NoOverwrite -Path $out -Force:$Force
     [IO.File]::WriteAllText($out, $t, (New-Object Text.UTF8Encoding($false)))
   } else {
     $out = Join-Path $OutDir ("$($e.name).vsynpreset")
+    Assert-NoOverwrite -Path $out -Force:$Force
     Write-ZstdRaw ([Text.Encoding]::UTF8.GetBytes($t)) $out
   }
   Write-Host ("wrote {0}" -f (Split-Path $out -Leaf))

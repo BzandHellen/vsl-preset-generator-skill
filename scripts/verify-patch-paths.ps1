@@ -1,4 +1,4 @@
-<#
+﻿<#
   verify-patch-paths.ps1
 
   Verify that every patchEntry in a preset (or root slot) really exists in the library,
@@ -10,10 +10,11 @@
 #>
 param(
   [Parameter(Mandatory)][string]$Preset,
-  [Parameter(Mandatory)][string]$Database,
+  [string]$Database,
   [string]$SevenZip = "C:\Program Files\7-Zip\7z.exe"
 )
 $ErrorActionPreference='Stop'
+if (-not $Database) { $Database = Join-Path (Split-Path $PSScriptRoot -Parent) 'data\vsl-patches.csv' }
 function Read-PresetText([string]$file){
   if ($file -match '\.vsynpreset$') {
     $d=Join-Path $env:TEMP ("vslvfy_"+[Guid]::NewGuid().ToString('N')); New-Item -ItemType Directory -Force $d|Out-Null

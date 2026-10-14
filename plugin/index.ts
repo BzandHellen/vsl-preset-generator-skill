@@ -9,7 +9,9 @@
  */
 import { Plugin } from "@opencode/plugin"
 import { execFile } from "node:child_process"
-import { existsSync } from "node:fs"
+import { existsSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 // Locate this skill's own directory: prefer the plugin's own location (works directly or via the
@@ -214,6 +216,123 @@ export default Plugin.define({
         execute: async (input) => {
           const i = input as { preset: string; database?: string }
           return text(await ps("verify-patch-paths.ps1", [...arg("Preset", i.preset), ...arg("Database", i.database ?? DB)], 180_000))
+        },
+      })
+
+      editor.add({
+        name: "export_preset",
+        description:
+          "Decompress .vsynpreset(s) to plain .json for analysis. Accepts a file, several files, or a folder. " +
+          "Writes into a Generated/generated folder only (safety).",
+        input: {
+          type: "object",
+          properties: {
+            preset: { type: "array", items: { type: "string" }, description: "files and/or folders" },
+            outDir: { type: "string", description: "must be under a Generated/generated folder" },
+            pretty: { type: "boolean" },
+            force: { type: "boolean", description: "allow overwriting existing output files" },
+            allowOutsideGenerated: { type: "boolean" },
+          },
+          required: ["preset", "outDir"],
+          additionalProperties: false,
+        },
+        options: { namespace: "vsl", codemode: true },
+        execute: async (input) => {
+          const i = input as { preset: string[]; outDir: string; pretty?: boolean; force?: boolean; allowOutsideGenerated?: boolean }
+          const args = [...arg("Preset", i.preset.join(",")), ...arg("OutDir", i.outDir)]
+          if (i.pretty) args.push("-Pretty")
+          if (i.force) args.push("-Force")
+          if (i.allowOutsideGenerated) args.push("-AllowOutsideGenerated")
+          return text(await ps("export-preset.ps1", args, 180_000))
+        },
+      })
+
+      editor.add({
+        name: "outline_preset",
+        description:
+          "Print a preset's full dimension tree: folder/patch nodes, switchControl (+A–D slot), parallel, " +
+          "child counts, nodeXFades as CC ranges, per-slot patchName / range / velXFadeMode / legatoMode.",
+        input: {
+          type: "object",
+          properties: {
+            preset: { type: "string" },
+            json: { type: "boolean" },
+            includeEntry: { type: "boolean" },
+          },
+          required: ["preset"],
+          additionalProperties: false,
+        },
+        options: { namespace: "vsl", codemode: true },
+        execute: async (input) => {
+          const i = input as { preset: string; json?: boolean; includeEntry?: boolean }
+          const args = [...arg("Preset", i.preset)]
+          if (i.json) args.push("-Json")
+          if (i.includeEntry) args.push("-IncludeEntry")
+          return text(await ps("outline-preset.ps1", args, 180_000, 200_000))
+        },
+      })
+
+      editor.add({
+        name: "compare_presets",
+        description:
+          "Compare presets node by node (position-based) and report differences. Instrument abbreviations are " +
+          "normalized to '@' by default, so cross-section mistakes stand out.",
+        input: {
+          type: "object",
+          properties: {
+            preset: { type: "array", items: { type: "string" }, description: "2 or more presets" },
+            json: { type: "boolean" },
+            noNormalize: { type: "boolean" },
+            tokens: { type: "array", items: { type: "string" }, description: "extra/replacement normalize tokens" },
+          },
+          required: ["preset"],
+          additionalProperties: false,
+        },
+        options: { namespace: "vsl", codemode: true },
+        execute: async (input) => {
+          const i = input as { preset: string[]; json?: boolean; noNormalize?: boolean; tokens?: string[] }
+          const args = [...arg("Preset", i.preset.join(","))]
+          if (i.json) args.push("-Json")
+          if (i.noNormalize) args.push("-NoNormalize")
+          if (i.tokens) args.push(...arg("Tokens", i.tokens.join(",")))
+          return text(await ps("compare-presets.ps1", args, 180_000, 200_000))
+        },
+      })
+
+      editor.add({
+        name: "edit_preset",
+        description:
+          "Edit fields of a preset and write a NEW file: setField / setPatch / setXfades (e.g. 8-value stepping) / " +
+          "removeSlot. Output must be under a Generated/generated folder; existing files are never overwritten " +
+          "unless force=true.",
+        input: {
+          type: "object",
+          properties: {
+            preset: { type: "string", description: "source preset (read-only)" },
+            edits: { type: "string", description: "JSON string or path to a JSON file with ops" },
+            outDir: { type: "string", description: "must be under a Generated/generated folder" },
+            name: { type: "string", description: "output base name (no extension)" },
+            force: { type: "boolean" },
+            allowOutsideGenerated: { type: "boolean" },
+          },
+          required: ["preset", "edits", "outDir"],
+          additionalProperties: false,
+        },
+        options: { namespace: "vsl", codemode: true },
+        execute: async (input) => {
+          const i = input as { preset: string; edits: string; outDir: string; name?: string; force?: boolean; allowOutsideGenerated?: boolean }
+          // pass complex JSON via a temp file (safer quoting than an inline argument)
+          let editsArg = i.edits
+          if (/^\s*[\[{]/.test(editsArg)) {
+            const p = join(tmpdir(), `vsl-edits-${Date.now()}-${Math.random().toString(36).slice(2)}.json`)
+            writeFileSync(p, editsArg, "utf8")
+            editsArg = p
+          }
+          const args = [...arg("Preset", i.preset), ...arg("Edits", editsArg), ...arg("OutDir", i.outDir)]
+          if (i.name) args.push(...arg("Name", i.name))
+          if (i.force) args.push("-Force")
+          if (i.allowOutsideGenerated) args.push("-AllowOutsideGenerated")
+          return text(await ps("edit-preset.ps1", args, 180_000))
         },
       })
     })

@@ -1,4 +1,4 @@
-<#
+﻿<#
   query-patches.ps1  —  query the extracted VSL patch database.
 
   Usage:

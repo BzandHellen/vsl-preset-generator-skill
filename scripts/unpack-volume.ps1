@@ -1,4 +1,4 @@
-<#
+﻿<#
   unpack-volume.ps1  —  extract the patch/preset tree embedded in a VSL *.syvolume.
 
   Usage:
@@ -23,9 +23,17 @@ $off=Get-FrameOffset $buf
 if($off -lt 0){ Write-Error "no zstd frame in $($v.Name)"; exit 1 }
 $n=[Math]::Min([int64]2MB,$cap-$off)
 $d=Join-Path $env:TEMP ("vslunpack_"+[Guid]::NewGuid().ToString('N')); New-Item -ItemType Directory -Force $d|Out-Null
-[IO.File]::WriteAllBytes((Join-Path $d 'f.zst'), $buf[$off..($off+$n-1)])
-& $SevenZip x -y ("-o$d\out") (Join-Path $d 'f.zst') 2>$null | Out-Null
-$dec=Get-ChildItem "$d\out" -File | Select-Object -First 1
+# adaptive carve: the frame size is unknown, so try growing slices until 7z yields output
+$dec=$null
+foreach($mb in 0.25,1,4,12){
+  $n=[Math]::Min([int64]($mb*1MB), $cap-$off)
+  Remove-Item "$d\out" -Recurse -Force -ErrorAction SilentlyContinue
+  [IO.File]::WriteAllBytes((Join-Path $d 'f.zst'), $buf[$off..($off+$n-1)])
+  & $SevenZip x -y ("-o$d\out") (Join-Path $d 'f.zst') 2>$null | Out-Null
+  $dec=Get-ChildItem "$d\out" -File -ErrorAction SilentlyContinue | Select-Object -First 1
+  if($dec -and $dec.Length -gt 0){ break }
+}
+if(-not $dec){ Write-Error "could not extract frame from $($v.Name)"; exit 1 }
 $txt=$enc.GetString([IO.File]::ReadAllBytes($dec.FullName)); Remove-Item $d -Recurse -Force -ErrorAction SilentlyContinue
 if($Mode -eq 'raw'){ [Console]::Out.Write($txt); exit 0 }
 $j=$txt|ConvertFrom-Json

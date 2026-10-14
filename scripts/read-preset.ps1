@@ -1,4 +1,4 @@
-<#
+﻿<#
   read-preset.ps1  —  decompress a .vsynpreset (or read a .json) and print it.
 
   Usage:

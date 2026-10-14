@@ -1,4 +1,4 @@
-<#
+﻿<#
   build-preset-from-patches.ps1
 
   Build a Synchron Player preset from an explicit list of patches, reusing an existing preset as the
@@ -27,9 +27,13 @@ param(
   [Parameter(Mandatory)][string]$Shell,
   [Parameter(Mandatory)][string]$SpecFile,
   [string]$OutDir   = ".",
-  [string]$SevenZip = "C:\Program Files\7-Zip\7z.exe"
+  [string]$SevenZip = "C:\Program Files\7-Zip\7z.exe",
+  [switch]$Force,
+  [switch]$AllowOutsideGenerated
 )
 $ErrorActionPreference='Stop'
+. "$PSScriptRoot\vsl-common.ps1"
+$OutDir = Assert-GeneratedDir -OutDir $OutDir -AllowOutsideGenerated:$AllowOutsideGenerated
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 
 function Read-PresetText([string]$file){
@@ -114,5 +118,6 @@ $newRn = ($rn | ConvertTo-Json -Depth 100 -Compress)
 $outText = $shellText.Substring(0,$slice.start) + $newRn + $shellText.Substring($slice.end+1)
 if ($spec.currentPreset) { $outText = [regex]::Replace($outText,'"currentPreset"\s*:\s*"[^"]*"',('"currentPreset":"'+$spec.currentPreset+'"')) }
 $out = Join-Path $OutDir ("$($spec.name).vsynpreset")
+Assert-NoOverwrite -Path $out -Force:$Force
 Write-ZstdRaw ([Text.Encoding]::UTF8.GetBytes($outText)) $out
 Write-Host ("wrote {0}  ({1} patches)" -f (Split-Path $out -Leaf), $children.Count)

@@ -30,6 +30,15 @@ description: >-
 | `vsl_generate_presets` | 用 map.json 批量克隆/换 patch |
 | `vsl_build_preset` | 用 patch 清单 JSON 拼预设 |
 | `vsl_verify_patches` | 校验 preset 里每条 patchEntry 是否存在 |
+| `vsl_export_preset` | 把 `.vsynpreset` 解成 JSON（单个/多个/整目录） |
+| `vsl_outline_preset` | 打印完整维度树（folder/patch、switchControl+槽位、parallel、xfade→CC、range、velXFadeMode…） |
+| `vsl_compare_presets` | 多份预设逐节点对比（缩写归一成 `@`），查跨声部不一致 |
+| `vsl_edit_preset` | 就地改字段再写新文件（`setField` / `setPatch` / `setXfades`（如 8 值一档）/ `removeSlot`） |
+
+> **写入安全（硬约束）**：所有写盘脚本（generate / build_preset / export / edit）**只允许写到路径中含
+> `Generated`/`generated` 的目录**，且**默认不覆盖已存在文件**（要覆盖须显式 `-Force`）。
+> 需要写到别处必须显式 `-AllowOutsideGenerated`（或设 `VSL_ALLOW_OUTSIDE_GENERATED=1`）。
+> 目的：**永不覆盖你手写的预设**。
 
 插件在全局 `~/.config/opencode/opencode.jsonc` 的 `plugins` 里注册。
 ⚠️ OpenCode 要求 `plugins` 条目指向**目录**（直接写 `.ts` 文件会被 `configured plugin path must be a directory` 拒绝），
@@ -125,7 +134,8 @@ scripts\verify-patch-paths.ps1 -Preset <x.vsynpreset> -Database data\vsl-patches
   另外低音 `XFade Resource` 只有 2 条（其它声部 22）。
 - **音域 `rangeFrom/rangeTo` 各声部不同**，必须按目标声部改写（`rangeSource`/`ranges`），
   否则用官方做法删掉这些行让播放器回填。
-- 在播放器里：**先 `Enable all slots` 再复制**；粘到**空白/已启用**的树；必要时**粘两次**修正音域。
+- 播放器内：**先 `Enable all slots` 再复制**；粘到**空白/已启用**的树；必要时**粘两次**修正音域。
+- **写入安全**：写盘脚本只写 `Generated/generated` 目录、默认不覆盖已存在文件（见上）。**永不覆盖手写预设。**
 - root slot / 预设**不含 mixer preset**（本库 mixer 与声部无关，但别库要留意）；需要时另加载 Mixer Preset。
 - 指向不存在的 patch 会报错——可在播放器里"删除含缺失 patch 的槽"清理。
 - **手工写 `.vsynpreset` 用的是 zstd raw block（合法但不压缩，约 117 KB/个）**；播放器用标准

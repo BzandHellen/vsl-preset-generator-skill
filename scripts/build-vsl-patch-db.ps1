@@ -1,4 +1,4 @@
-<#
+﻿<#
   build-vsl-patch-db.ps1  (skill copy)
 
   Build/extend a patch + factory-preset database for installed VSL Synchron Player libraries.
