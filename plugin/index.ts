@@ -386,6 +386,29 @@ export default Plugin.define({
           return text(await ps("scan-presets.ps1", args, 300_000, 200_000))
         },
       })
+
+      editor.add({
+        name: "scan_volume_frames",
+        description:
+          "Diagnostic: find every compressed frame in a VSL *.syvolume (zstd / zstd-skippable / gzip / xz / lz4 / " +
+          "bzip2 / 7z) and try to decode it; reports the decoded size and whether it looks like a preset body or a patch tree.",
+        input: {
+          type: "object",
+          properties: {
+            volume: { type: "string", description: "absolute path to a *.syvolume" },
+            maxCandidates: { type: "number", description: "default 60" },
+          },
+          required: ["volume"],
+          additionalProperties: false,
+        },
+        options: { namespace: "vsl", codemode: true },
+        execute: async (input) => {
+          const i = input as { volume: string; maxCandidates?: number }
+          const args = [...arg("Volume", i.volume)]
+          if (i.maxCandidates) args.push(...arg("MaxCandidates", i.maxCandidates))
+          return text(await ps("scan-volume-frames.ps1", args, 900_000, 100_000))
+        },
+      })
     })
   },
 })

@@ -36,6 +36,7 @@ description: >-
 | `vsl_edit_preset` | 改字段写新文件：`setField` / `setPatch` / `setXfades`（8 值一档）/ `removeSlot` / `setController` / **成套修复** `mapSection` `fillSlots` `fixCrossSection` `syncFromPresets` `syncAllSections`（`report:true` 只报告不写） |
 | `vsl_controller_map` | 读控制器映射：Dim.Ctrl A–H（`nodeXFade0..7`）与自动化 destination → source |
 | `vsl_scan_presets` | 扫一个目录出总报告：槽数、各维度 Dim.Ctrl 来源、异常（空槽 / 缺音域 / 重复 patch / 跨声部指错） |
+| `vsl_scan_volume_frames` | 诊断：扫 `.syvolume` 里所有压缩帧并尝试解码（用于判断"本体是否可得"） |
 
 > **写入安全（硬约束）**：所有写盘脚本（generate / build_preset / export / edit）**只允许写到路径中含
 > `Generated`/`generated` 的目录**，且**默认不覆盖已存在文件**（要覆盖须显式 `-Force`）。
@@ -181,3 +182,29 @@ scripts\verify-patch-paths.ps1 -Preset <x.vsynpreset> -Database data\vsl-patches
 - `examples/strings-pro-map.json` —— 上面 5 声部的 map 配置示例（含低音 LyV→molto Vib 处理）
 - 其它库的乐器代码不统一（Elite `vi1/vi2/va/vc/db`、Dimension `vi/va/vc/db`、Brass `tp1/ho1/…`），
   一律先查 `data/vsl-patches.csv` 的 `ContentId`/`Instrument` 列。
+
+## 8. 工具覆盖度（能做到 / 仍需人工）
+
+**已覆盖**（14 个 `vsl_*` 工具）
+
+| 环节 | 怎么做 |
+|---|---|
+| 建/刷新数据库 | `vsl_db_build`（全量 ~95s，增量几秒） |
+| 查名字 | `vsl_db_query`（按库/声部/技法/正则） |
+| 读预设 | `vsl_read_preset`、`vsl_export_preset`（导出 JSON）、`vsl_outline_preset`（完整树 + 控制器映射）、`vsl_controller_map` |
+| 对比 | `vsl_compare_presets`（节点 + 控制器映射） |
+| 体检 | `vsl_scan_presets`（目录总表 + 异常：空槽 / 缺音域 / 重复 patch / 跨声部指错） |
+| 生成 | `vsl_generate_presets`（按 map 克隆到各声部）、`vsl_build_preset`（按 patch 清单拼，支持 per-slot 参数） |
+| 修改 | `vsl_edit_preset`：`setField`（含点路径）/ `setPatch` / `setXfades`（`steps` \| 四元组）/ `removeSlot` / `setController` / `mapSection` / `fillSlots` / `fixCrossSection` / `syncFromPresets` / `syncAllSections`；`report:true` 只预览 |
+| 校验 | `vsl_verify_patches`（每条 patchEntry 是否存在） |
+| 卷诊断 | `vsl_unpack_volume`（patch 树 / 预设名清单）、`vsl_scan_volume_frames`（所有压缩帧） |
+| 写盘安全 | 只写 `Generated`；默认不覆盖 |
+
+**仍需人工 / 做不到（已知边界）**
+
+- 工厂预设**本体**导出 → 私有编码，**只能**在播放器里 `Copy root slot` / 另存（见 §1）
+- **覆盖 / 删除**手写预设 → 设计上禁止
+- 播放器 GUI 操作：加载 / 保存预设、勾 `parallel`、`Enable all slots`、粘 root slot、设 Dim.Ctrl 来源
+- mixer 部分：可用 `setField` 改字段，但没有"加载 / 切换 Mixer Preset"的 op
+- 从零新建**空**预设：目前只能基于某个 shell 预设（`build_preset` 需要 shell）
+- 跨库一次性批量（多库 × 多预设）
