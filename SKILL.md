@@ -35,6 +35,7 @@ description: >-
 | `vsl_compare_presets` | 多份预设逐节点对比（缩写归一成 `@`），查跨声部不一致 |
 | `vsl_edit_preset` | 就地改字段再写新文件（`setField` / `setPatch` / `setXfades`（如 8 值一档）/ `removeSlot` / `setController`） |
 | `vsl_controller_map` | 读控制器映射：Dim.Ctrl A–H（`nodeXFade0..7`）与自动化 destination → source |
+| `vsl_scan_presets` | 扫一个目录出总报告：槽数、各维度 Dim.Ctrl 来源、异常（空槽 / 缺音域 / 重复 patch / 跨声部指错） |
 
 > **写入安全（硬约束）**：所有写盘脚本（generate / build_preset / export / edit）**只允许写到路径中含
 > `Generated`/`generated` 的目录**，且**默认不覆盖已存在文件**（要覆盖须显式 `-Force`）。

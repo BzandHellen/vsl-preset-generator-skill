@@ -357,6 +357,31 @@ export default Plugin.define({
           return text(await ps("controller-map.ps1", args, 120_000))
         },
       })
+      editor.add({
+        name: "scan_presets",
+        description:
+          "Scan a folder (or list) of presets and report a summary + anomaly hints: folder/patch-slot counts, Dim.Ctrl " +
+          "sources per dimension, instrument tokens, empty slots, missing ranges, duplicated patches, minority-token " +
+          "slots (cross-section mistakes).",
+        input: {
+          type: "object",
+          properties: {
+            path: { type: "array", items: { type: "string" }, description: "folders and/or files" },
+            noRecurse: { type: "boolean" },
+            json: { type: "boolean" },
+          },
+          required: ["path"],
+          additionalProperties: false,
+        },
+        options: { namespace: "vsl", codemode: true },
+        execute: async (input) => {
+          const i = input as { path: string[]; noRecurse?: boolean; json?: boolean }
+          const args = [...arg("Path", i.path.join(","))]
+          if (i.noRecurse) args.push("-NoRecurse")
+          if (i.json) args.push("-Json")
+          return text(await ps("scan-presets.ps1", args, 300_000, 200_000))
+        },
+      })
     })
   },
 })
