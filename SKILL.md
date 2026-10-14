@@ -69,9 +69,10 @@ description: >-
   维度槽位 key 是 `nodeXFade0..7` = **Dim.Ctrl A..H（共 8 个）**，对应 `switchControl = 257 + i`。
   source 可为 `ccN` / `velocity` / `previousVelocity` / `pitchBend` / `speed` / `duration` / `aftertouch(Alt)` / `none`。
   （root slot 不含此块。）
-- **切换语义（实测）**：`parallel=false`（默认）= **单极硬切换**（按下的那一刻决定档位，按住期间拉控制器不变）；
-  只有手动勾 `parallel` 才是渐变/叠加。**切换点 = 该槽 `fadeOutStart..fadeOutEnd` 区间的中点**（换算 CC）
-  → “每 8 值一档” = 让中点落在 8/16/24…（`edit-preset.ps1` 的 `setXfades … "steps":8`），末档到 127。
+- **切换语义（实测）**：`parallel=false`（默认）= **单极硬切换**（按下的那一刻决定档位，按住期间拉控制器不变），
+  切换点 = 该槽 `fadeOutStart..fadeOutEnd` 的**中点**；`parallel=true` = **渐变/叠加**，**按住时实时渐变**，
+  渐变区间 = `nodeXFades` 的重叠区本身（面板显示即精确值）。
+  → 硬切"每 8 值一档"：中点落在 8/16/24…（`setXfades … "steps":8`），分档 `0–7 / 8–15 / …`，末档到 127。
 - **`.syvolume`** = `VINv` 魔数 + **明文 JSON 头**（含 `id`/`description`/`volumeRefs`）
   + 一个 **zstd 帧**（内容是该乐器卷的**完整 patch 树 + 工厂预设名清单**）。
 - **工厂预设本体拿不到**（实测结论）：卷里那个 zstd 帧只是一个**清单**（名字 → 编号；

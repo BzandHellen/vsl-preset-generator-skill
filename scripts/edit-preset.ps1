@@ -120,8 +120,16 @@ foreach ($op in @($ops | Where-Object { $_.op -ne 'setController' })) {
   switch ($op.op) {
     'setField' {
       $n = Get-Path $op.path
-      Set-Prop $n $op.field $op.value
-      $CHANGES.Add("setField $($op.path -join '/') . $($op.field) = $($op.value)")
+      $field = [string]$op.field
+      if ($field -match '\.') {
+        $parts = $field -split '\.'
+        $obj = $n
+        for ($k=0; $k -lt $parts.Count-1; $k++) { $obj = $obj.$($parts[$k]) }
+        Set-Prop $obj $parts[-1] $op.value
+      } else {
+        Set-Prop $n $field $op.value
+      }
+      $CHANGES.Add("setField $($op.path -join '/') . $field = $($op.value)")
     }
     'setPatch' {
       $n = Get-Path $op.path
@@ -157,8 +165,11 @@ foreach ($op in @($ops | Where-Object { $_.op -ne 'setController' })) {
       }
       $n.nodeXFades = $arr
       $mids = @()
-      foreach ($e in $arr) { $mids += [int][math]::Round((([double]$e.fadeOutStart + [double]$e.fadeOutEnd)/2)*127) }
-      $CHANGES.Add("setXfades $($op.path -join '/'): $kids slot(s), switch points @ " + ($mids -join ','))
+      for ($t=0; $t -lt ($arr.Count-1); $t++) { $mids += [int][math]::Round((([double]$arr[$t].fadeOutStart + [double]$arr[$t].fadeOutEnd)/2)*127) }
+      $bands = @(); $lo = 0
+      for ($t=0; $t -lt $mids.Count; $t++) { $bands += "$lo-$($mids[$t]-1)"; $lo = $mids[$t] }
+      $bands += "$lo-127"
+      $CHANGES.Add("setXfades $($op.path -join '/'): $kids slot(s) -> bands " + ($bands -join ', '))
     }
     'removeSlot' {
       $n = Get-Path $op.path

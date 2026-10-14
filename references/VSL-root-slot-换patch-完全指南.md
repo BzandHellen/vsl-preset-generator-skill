@@ -104,6 +104,18 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
   命令：`edit-preset.ps1 -Edits '[{"op":"setXfades","path":[""],"steps":8}]'`。
 - 工厂预设用的是默认曲线（并非 8 等分，Harmonics 那档还跨了大半个范围），所以直接拿它用 CC58 切换会"糊"。
 
+**渐变（`parallel = true`）实测行为**：
+
+| 项目 | 结论 |
+|---|---|
+| 开关 | 就是节点上的 **`parallel`**（true = 渐变/叠加；false = 硬切） |
+| 按住时 | **实时渐变**（硬切则只在按下时定档） |
+| 渐变区间 | **= 重叠区间本身**（写进 `nodeXFades` 的值；播放器面板显示**就是精确值**）。实测把重叠写成 `20–80` → 面板 20/80，听感"20 开始混、80 变纯" |
+| `parameters.nodeXFadeMode`（DLL: `NodeXFadeMode_XFade` / `Mix`） | A/B 对比**听不出差别**（未见差异，待进一步确认） |
+
+→ **硬切**：`parallel=false` + 把中点放在 8/16/24…（分档 `0–7 / 8–15 / 16–23 / …`）
+→ **渐变**：`parallel=true` + 用 `nodeXFades` 随意设渐变宽度。
+
 ### 3.3 通用参数 `parameters`（folder 与 patch 都有，子级继承父级）
 
 `gain, balance, attack, decay, sustain, release, hold, delay, shutdown, startOffset, startOffsetAttack, gainLow, gainLowXFade, gainCurve, gainCurveXFade, releaseVoiceLimit, transposeOctave/Semitone/Cents, vibratoMode, velXFadeMode, nodeXFadeMode`
