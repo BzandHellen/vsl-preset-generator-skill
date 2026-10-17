@@ -153,9 +153,10 @@ foreach ($op in @($ops | Where-Object { $_.op -ne 'setController' })) {
       } else {
         # switch mode: put the boundary (= midpoint of the shared fade interval) on multiples of N
         #   slot i: in = interval(b_i), out = interval(b_i+1);  interval(b) = [b-1, b+1]  (b = 0/127 -> zero width)
+        #   bounds = steps*i - 1  (每 N 个值一档：边界 = N-1, 2N-1, ... 例 steps:8 -> 7/15/23/31，末档才是满 8 个)
         $steps = if ($op.steps) { [int]$op.steps } else { 8 }
         $bounds = @()
-        for ($i=0; $i -le $kids; $i++) { $bounds += $(if ($i -eq 0) {0} elseif ($i -ge $kids) {127} else {$steps * $i}) }
+        for ($i=0; $i -le $kids; $i++) { $bounds += $(if ($i -eq 0) {0} elseif ($i -ge $kids) {127} else {($steps * $i) - 1}) }
         for ($i=0; $i -lt $kids; $i++) {
           $bi = $bounds[$i]; $bn = $bounds[$i+1]
           if ($bi -le 0) { $a0=0; $a1=0 } elseif ($bi -ge 127) { $a0=127; $a1=127 } else { $a0=[Math]::Max(0,$bi-1); $a1=[Math]::Min(127,$bi+1) }

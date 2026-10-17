@@ -27,10 +27,17 @@ function Read-PresetText([string]$file){
 }
 $txt = Read-PresetText $Preset
 $rows = Import-Csv $Database
-$set = New-Object 'System.Collections.Generic.HashSet[string]'
-foreach ($r in $rows) { [void]$set.Add(($r.Path + '/' + $r.PatchFile)) }
+$map = @{}
+foreach ($r in $rows) { $map[($r.Path + '/' + $r.PatchFile)] = $r.ContentId }
 
-$pe = [regex]::Matches($txt,'vol://[^:]*:public/patches/([^"]*\.vsynpatch)') | ForEach-Object { $_.Groups[1].Value }
-$miss = $pe | Where-Object { -not $set.Contains($_) } | Select-Object -Unique
-Write-Host ("patchEntry: {0}   NOT FOUND: {1}" -f $pe.Count, @($miss).Count)
-$miss | ForEach-Object { Write-Host ("  MISSING -> " + $_) }
+# 同时校验 (1) patch 路径存在  (2) contentId 与该 patch 所属卷一致  ← 以前漏了 (2)
+$ms = [regex]::Matches($txt,'vol://([^:"]*):public/patches/([^"]*\.vsynpatch)')
+$miss = @(); $badCid = @()
+foreach ($m in $ms) {
+  $cid = $m.Groups[1].Value; $rel = $m.Groups[2].Value
+  if (-not $map.ContainsKey($rel)) { $miss += $rel }
+  elseif ($map[$rel] -ne $cid) { $badCid += ("{0}   (cid={1}, 应为 {2})" -f $rel, $cid, $map[$rel]) }
+}
+Write-Host ("patchEntry: {0}   NOT FOUND: {1}   BAD-CID: {2}" -f $ms.Count, @($miss).Count, @($badCid).Count)
+@($miss) | Select-Object -Unique | ForEach-Object { Write-Host ("  MISSING -> " + $_) }
+@($badCid) | Select-Object -Unique | ForEach-Object { Write-Host ("  BAD-CID -> " + $_) }
