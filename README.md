@@ -45,29 +45,30 @@ data/                          # (not committed) generated database — rebuild 
 ## Requirements
 
 - Windows + PowerShell (5.1 is fine)
-- [7-Zip](https://www.7-zip.org/) at `C:\Program Files\7-Zip\7z.exe`
+- [7-Zip](https://www.7-zip.org/) (the scripts use `C:\Program Files\7-Zip\7z.exe` by default;
+  override with the `VSL_SEVENZIP` environment variable)
 - VSL Synchron Player libraries installed locally (for the database / patches)
 
 ## Usage (scripts)
 
 ```powershell
 # 1) build / refresh the database (full ~95s; incremental refresh a few seconds)
-powershell -ExecutionPolicy Bypass -File scripts/build-vsl-patch-db.ps1 -LibraryRoot "D:\VSL Library"
+powershell -ExecutionPolicy Bypass -File scripts/build-vsl-patch-db.ps1 -LibraryRoot "<your VSL library root>"
 
 # 2) find exact names
 powershell -ExecutionPolicy Bypass -File scripts/query-patches.ps1 -Product "Horn 1" -Patch "Rip|Legato"
 
 # 3) clone a template to several instruments (see examples/strings-pro-map.json)
 powershell -ExecutionPolicy Bypass -File scripts/generate-section-presets.ps1 `
-  -Template "…\STR Synchron Vln1 a14.vsynpreset" -MapFile examples/strings-pro-map.json -OutDir "…\Presets\Generated"
+  -Template "<your template .vsynpreset|.json>" -MapFile examples/strings-pro-map.json -OutDir "<…>\Generated"
 
 # 4) build a preset from a patch list (see examples/horn1.json)
 powershell -ExecutionPolicy Bypass -File scripts/build-preset-from-patches.ps1 `
-  -Shell "…\some.vsynpreset" -SpecFile examples/horn1.json -OutDir "…\Presets\Generated"
+  -Shell "<any existing .vsynpreset to use as shell>" -SpecFile examples/horn1.json -OutDir "<…>\Generated"
 
 # 5) verify
 powershell -ExecutionPolicy Bypass -File scripts/verify-patch-paths.ps1 `
-  -Preset "…\Generated\Horn 1 - Legato Long Marcato Rips.vsynpreset" -Database data/vsl-patches.csv
+  -Preset "<…>\Generated\Horn 1 - Legato Long Marcato Rips.vsynpreset" -Database data/vsl-patches.csv
 ```
 
 ## Usage (OpenCode tools)
@@ -78,7 +79,7 @@ plugins folder:
 
 ```powershell
 cmd /c mklink /J "$env:USERPROFILE\.config\opencode\plugins\vsl-synchron-player" `
-  "C:\Agent Program Files\Skills\vsl-synchron-player\plugin"
+  "<path\to\skill>\plugin"
 ```
 
 > Linking it from `opencode.json(c)` `"plugins"` also works, but a stale compiled cache can survive

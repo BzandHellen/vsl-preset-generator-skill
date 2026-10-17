@@ -1,11 +1,11 @@
 # VSL Synchron Player —— Root Slot / 换 Patch 完全指南
 
 > 适用于：Vienna Synchron Player（以及 Synchron Piano Player，格式同源）。
-> 本文实例库：**Synchron Strings Pro**（本机 `D:\VSL Library\Synchron Series\VSL - Synchron Strings Pro`）。
-> 结论基于：官方手册 + VSL 论坛 + vi-control + **对本机已装库/预设的实测**。
+> 本文实例库：**Synchron Strings Pro**（库根下 `Synchron Series\VSL - Synchron Strings Pro`）。
+> 结论基于：官方手册 + VSL 论坛 + vi-control + **对已装库/预设的实测**。
 >
 > 配套文件（同目录）：
-> - `vsl-content-ids.txt` —— 本机扫描出的**全部**内容卷 ID（734 条，含各话筒卷）
+> - `vsl-content-ids.txt` —— 扫描出的**全部**内容卷 ID（734 条，含各话筒卷）
 > - `vsl-instrument-ids.csv` / `vsl-instrument-ids.txt` —— 过滤掉话筒后缀后的**乐器级 ID**（150 条）
 
 ---
@@ -100,9 +100,9 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
 **切换点规则（3 点实测验证）**：某槽被"选中"的边界 = **该槽 `fadeOutStart..fadeOutEnd` 区间的中点**（换算成 CC）。
 
 - 想让边界落在 `B`：把**前一个槽**的 `fadeOutStart/fadeOutEnd` 设成以 `B` 居中（用 `[B-1, B+1]` 即可，避免播放器的"最小重叠"限制）。
-- 所以"**每 8 值一档**"就是：各边界中点 = 8/16/24…，末档自动延伸到 127。
-  命令：`edit-preset.ps1 -Edits '[{"op":"setXfades","path":[""],"steps":8}]'`。
-- 工厂预设用的是默认曲线（并非 8 等分，Harmonics 那档还跨了大半个范围），所以直接拿它用 CC58 切换会"糊"。
+- 想"**每 N 个值一档**"：各边界中点依次落在 `N / 2N / 3N …`，末档自动延伸到 127。
+  命令：`edit-preset.ps1 -Edits '[{"op":"setXfades","path":[""],"steps":8}]'`（`steps:8` = 每 8 值一档，换成别的 N 同理）。
+- 工厂预设用的是默认曲线（并非等分，Harmonics 那档还跨了大半个范围），所以直接拿它按 CC 切会"糊"。
 
 **渐变（`parallel = true`）实测行为**：
 
@@ -113,7 +113,7 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
 | 渐变区间 | **= 重叠区间本身**（写进 `nodeXFades` 的值；播放器面板显示**就是精确值**）。实测把重叠写成 `20–80` → 面板 20/80，听感"20 开始混、80 变纯" |
 | `parameters.nodeXFadeMode`（DLL: `NodeXFadeMode_XFade` / `Mix`） | A/B 对比**听不出差别**（未见差异，待进一步确认） |
 
-→ **硬切**：`parallel=false` + 把中点放在 8/16/24…（分档 `0–7 / 8–15 / 16–23 / …`）
+→ **硬切**：`parallel=false` + 把中点放在 N 的倍数上（例：`8/16/24…` → 分档 `0–7 / 8–15 / …`）
 → **渐变**：`parallel=true` + 用 `nodeXFades` 随意设渐变宽度。
 
 ### 3.3 通用参数 `parameters`（folder 与 patch 都有，子级继承父级）
@@ -147,7 +147,7 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
 完整预设里，`data.custom.paramControl.mappings` 存**每个 destination 绑定的控制器来源**；
 维度控制用 `nodeXFade0..7` 作 key，对应 **Dim.Ctrl A..H**（`switchControl` = `257 + i`）。
 
-本机实例（Strings Pro Vln1）：
+实例（Strings Pro Vln1）：
 
 ```json
 "paramControl":{"mappings":{
@@ -260,11 +260,11 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
 ### 方法 F：把 JSON 重新编码成**可直接导入**的 `.vsynpreset`
 
 `.vsynpreset` = **一个 zstd 帧**，内容就是预设 JSON（没有额外文件头）。
-本机没有 zstd 压缩器，但可以用 **raw block**（不压缩块）手工构造一个**合法 zstd 帧**——任何 zstd 解码器都能读，只是体积≈JSON 原始大小（约 117 KB / 个）。脚本见 §7，本文档已用它生成了 4 个可直接导入的 preset（见 `generated/`）。
+没有 zstd 压缩器也能用 **raw block**（不压缩块）手工构造一个**合法 zstd 帧**——任何 zstd 解码器都能读，只是体积≈JSON 原始大小（约 60–120 KB / 个）。脚本见 §7（要点见 §6.4）。
 
 ---
 
-## 6. Synchron Strings Pro —— 精确对照表（本机实测，经卷内 patch 树核对）
+## 6. Synchron Strings Pro —— 精确对照表（实测，经卷内 patch 树核对）
 
 | 声部 | 内容卷 ID | Pro 文件夹 | FULL VELOCITIES 文件夹 | 缩写 |
 |---|---|---|---|---|
@@ -276,7 +276,7 @@ vol://at.co.vsl.sy.stringspro.violins1:public/patches/02 Synchron Strings Pro/01
 
 > ⚠️ **最容易犯的错**：乐器文件夹**前面的编号必须一起换**（1st=01、2nd=02、Vla=03、Vc=04、DB=05）。
 > 只把 `1st Violins-14`→`2nd Violins-10` 而保留 `01 `，会得到**不存在的** `01 SY 2nd Violins-10 Pro`。
-> （本机 `Documents\VSL\...\Presets\Strings` 里那几个 `STR Synchron Vln2/Vla/Vc/DB` 预设**正是这个 bug**——开头全是 `01 SY …`，需要修，或被 `generated/` 里正确的版本替换。）
+> 反例：只换乐器名、不换编号，克隆出来的就会是**不存在的** `01 SY 2nd Violins-10 Pro`（开头编号仍是 `01`）。
 
 以 **小提1** 为模板，每声部三步（大提四步）：
 
@@ -310,33 +310,22 @@ Strings Pro 五个声部的 factory 预设里 `switchControl` 序列**完全一�
 
 ---
 
-### 6.4 已生成的可导入 preset（`generated/`）
+### 6.4 生成物（方法 F 的产物）
 
-用方法 F 生成了 4 个可直接导入的 `.vsynpreset`：
+方法 F 生成的是**可直接导入**的 `.vsynpreset`，内容 = 模板树 ＋ 各声部正确的 ID / 文件夹 / 缩写 / 音域。
 
-- `STR Synchron Vln2 a10 (generated).vsynpreset`
-- `STR Synchron Vla a8 (generated).vsynpreset`
-- `STR Synchron Vc a8 (generated).vsynpreset`
-- `STR Synchron DB a6 (generated).vsynpreset`
-
-内容 = 你的 Vln1 预设（26 个技法槽）＋各声部正确的 ID/文件夹/缩写＋各声部正确音域。
-**已逐条核对**：四个声部的 26 条 `patchEntry` **全部命中**卷内真实 patch 树（26/26）。
-
-> 低音有一处特别处理：模板里 "NV-Vib Leg → Lyrical Vib" 用的是 SS1 的 `13F …_Legato-LyV`，
-> 而 **低音在 Synchron Strings I 里没有 LyV（抒情/多颤）**，该 patch 不存在；
-> 已改指向 Pro 层的 `…/05 SY Double basses-6 Pro/02 Legatos/31 DB-6 Legato molto Vib.vsynpatch`（音域 23–60）。
-> 详见 §9.3。
-
-- 放入 `…\Documents\VSL\Vienna Synchron Player\Presets\` 即可加载（建议改名，避免与现有 `STR Synchron …` 冲突）。
-- 复用 Vln1 的 mixer 区块（本库 mixer 不含声部专属 volume id，故跨声部可用）；若要各声部自带混音，加载后在 MIX 页加载对应 Mixer Preset。
-- 手工构造的是 zstd **raw block**（合法但不压缩）。播放器用标准 zstd 解码器，理论可读；若播放器拒收，改用 root slot 文本粘贴（内容等价）。
-
-> 修复建议：你现有的 `STR Synchron Vln2/Vla/Vc/DB` 预设开头是 `01 SY …`（错误），
-> 可删掉换成 `generated/` 里正确的版本，或按 §6 把 `01 SY 1st Violins-14`→`0N SY …` 重新替换一遍。
+- 放入 `…\Documents\VSL\Vienna Synchron Player\Presets\` 即可加载（同名会冲突，注意改名）。
+- 复用模板的 mixer 区块（本库 mixer 不含声部专属 volume id，故跨声部可用）；若要各声部自带混音，
+  加载后在 MIX 页加载对应 Mixer Preset。
+- 手工构造的是 zstd **raw block**（合法但不压缩，约 60–120 KB/个）。播放器用标准 zstd 解码器，理论可读；
+  若播放器拒收，改用 root slot 文本粘贴（内容等价）。
+- **生成后必做**：`verify-patch-paths.ps1` 要 `NOT FOUND: 0`（新版还会报 `BAD-CID`）；
+  维度 / 控制器用 `outline-preset.ps1` / `controller-map.ps1` 抽查。
+  单声部不对称导致的缺 patch（如低音无 `LyV`）见 §6.2 与 §9.3。
 
 ---
 
-## 7. 全库内容卷 ID（本机 150 个乐器级）
+## 7. 全库内容卷 ID（150 个乐器级）
 
 完整清单见同目录：
 - `vsl-content-ids.txt`（734 条，含各话筒卷）
@@ -348,7 +337,7 @@ Strings Pro 五个声部的 factory 预设里 `switchControl` 序列**完全一�
 
 ```powershell
 $enc = [Text.Encoding]::GetEncoding(28591)   # 注意：PS 5.1 没有 [Text.Encoding]::Latin1
-$roots = @("D:\VSL Library","C:\ProgramData\VSL\Vienna Synchron Player\Volumes")
+$roots = @("<your VSL library root>","<…>\ProgramData\VSL\Vienna Synchron Player\Volumes")
 $rows = foreach($f in (Get-ChildItem $roots -Recurse -File -Include *.syvolume -ErrorAction SilentlyContinue)){
   $fs=[IO.File]::OpenRead($f.FullName)
   $len=[Math]::Min(16384,$fs.Length); $buf=New-Object byte[] $len; [void]$fs.Read($buf,0,[int]$len); $fs.Close()
@@ -416,7 +405,7 @@ function Write-ZstdRaw([byte[]]$data,[string]$path){   # 合法 zstd 帧，raw b
 ### 生成各声部 preset / root slot（模板替换）脚本骨架
 
 ```powershell
-$base = [IO.File]::ReadAllText("STR Synchron Vln1 a14.json")   # 解压后的 Vln1 预设 JSON（或你复制的 root slot）
+$base = [IO.File]::ReadAllText("<模板>.json")   # 解压后的模板预设 JSON（或复制的 root slot）
 $sections = @(
   @{ n='Vln2'; id='violins2'; old='01 SY 1st Violins-14'; new='02 SY 2nd Violins-10'; abbr='VI-14'; abbrTo='VI-10' },
   @{ n='Vla';  id='violas';   old='01 SY 1st Violins-14'; new='03 SY Violas-8';       abbr='VI-14'; abbrTo='VA-8'  },
@@ -455,7 +444,7 @@ foreach($s in $sections){
 
 ## 9. 各库 / 技法命名差异观察
 
-### 9.1 内容卷 ID 的乐器代码（本机实测）
+### 9.1 内容卷 ID 的乐器代码（实测）
 
 | 库 | 产品代码 | 乐器代码 |
 |---|---|---|
@@ -501,7 +490,7 @@ foreach($s in $sections){
 
 注意：**低音在 Pro 层是有"多颤"的**——`05 SY Double basses-6 Pro/02 Legatos/31 DB-6 Legato molto Vib.vsynpatch`（以及 `03 Long/11 DB-6 Long molto Vibrato`）。所以低音的替代做法是：
 - 删掉该槽（与 VSL 自己的低音预设一致），**或**
-- 把它改指向 Pro 的 `31 DB-6 Legato molto Vib.vsynpatch`（`generated/` 里的低音版本就是这么做的，音域 23–60）。
+- 把它改指向 Pro 的 `31 DB-6 Legato molto Vib.vsynpatch`（音域 23–60）。
 
 同理，任何"从别的声部克隆"的操作，遇到低音/其它不对称声部时，务必用 **§5 方法 E** 先列出该声部的真实 patch 清单再替换。
 
@@ -523,7 +512,7 @@ foreach($s in $sections){
 
 ---
 
-## 附录：本机全部乐器级内容卷 ID（150）
+## 附录：全部乐器级内容卷 ID（150）
 
 ### 
 

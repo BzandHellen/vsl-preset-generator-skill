@@ -10,13 +10,14 @@ description: >-
 
 # VSL Synchron Player —— 换 Patch / 预设克隆
 
-本机环境：库在 `D:\VSL Library`，玩家数据在 `C:\ProgramData\VSL\Vienna Synchron Player`，
-用户预设在 `C:\Users\Administrator\Documents\VSL\Vienna Synchron Player\Presets`。
+**本 skill 目录 = 这份文件所在目录**（可放在任意本地 skill 仓库，再 **软链（junction）** 到 harness 的
+skills 目录供 OpenCode 使用）。相对路径都相对它：`scripts/`（脚本）、`data/`（数据库）、
+`references/`（文档）、`examples/`（示例）、`plugin/`（工具插件）。
 
-**本 skill 目录 = 这份文件所在目录**。它存放在本地 skill 仓库
-`C:\Agent Program Files\Skills\vsl-synchron-player`，并**软链（junction）**到 harness 目录
-`C:\Users\Administrator\.config\opencode\skills\vsl-synchron-player` 供 OpenCode 使用。
-相对路径都相对它：`scripts/`（脚本）、`data/`（数据库）、`references/`（文档）、`examples/`（示例）、`plugin/`（工具插件）。
+环境前提（路径按本机实际填）：
+- **采样库根 `<LibraryRoot>`**（用 `build-vsl-patch-db.ps1 -LibraryRoot <路径>` 指定；不给则用脚本内默认值）；
+- 播放器用户数据目录（`…\ProgramData\VSL\Vienna Synchron Player`）；
+- **用户预设目录** `…\Documents\VSL\Vienna Synchron Player\Presets\`（生成物放进去即被播放器识别）。
 
 ### 已注册的工具（OpenChamber / Code Mode 可直接调用）
 `plugin/index.ts` 把下面的 shell 脚本注册成 OpenCode 工具（`vsl` 命名空间，codemode 可用）：
@@ -33,27 +34,26 @@ description: >-
 | `vsl_export_preset` | 把 `.vsynpreset` 解成 JSON（单个/多个/整目录） |
 | `vsl_outline_preset` | 打印完整维度树（folder/patch、switchControl+槽位、parallel、xfade→CC、range、velXFadeMode…） |
 | `vsl_compare_presets` | 多份预设逐节点对比（缩写归一成 `@`），查跨声部不一致 |
-| `vsl_edit_preset` | 改字段写新文件：`setField` / `setPatch` / `setXfades`（8 值一档）/ `removeSlot` / `setController` / **成套修复** `mapSection` `fillSlots` `fixCrossSection` `syncFromPresets` `syncAllSections`（`report:true` 只报告不写） |
+| `vsl_edit_preset` | 改字段写新文件：`setField` / `setPatch` / `setXfades`（按步长分档）/ `removeSlot` / `setController` / **成套修复** `mapSection` `fillSlots` `fixCrossSection` `syncFromPresets` `syncAllSections`（`report:true` 只报告不写） |
 | `vsl_controller_map` | 读控制器映射：Dim.Ctrl A–H（`nodeXFade0..7`）与自动化 destination → source |
 | `vsl_scan_presets` | 扫一个目录出总报告：槽数、各维度 Dim.Ctrl 来源、异常（空槽 / 缺音域 / 重复 patch / 跨声部指错） |
 | `vsl_scan_volume_frames` | 诊断：扫 `.syvolume` 里所有压缩帧并尝试解码（用于判断"本体是否可得"） |
 
-> **写入安全（硬约束）**：所有写盘脚本（generate / build_preset / export / edit）**只允许写到路径中含
+> **写入安全**：所有写盘脚本（generate / build_preset / export / edit）**只写入路径中含
 > `Generated`/`generated` 的目录**，且**默认不覆盖已存在文件**（要覆盖须显式 `-Force`）。
 > 需要写到别处必须显式 `-AllowOutsideGenerated`（或设 `VSL_ALLOW_OUTSIDE_GENERATED=1`）。
-> 目的：**永不覆盖你手写的预设**。
 
 插件注册方式（**推荐：自动发现 + junction**）：
-`~/.config/opencode/plugins/vsl-synchron-player` → junction 到 `C:\Agent Program Files\Skills\vsl-synchron-player\plugin`。
+`~/.config/opencode/plugins/<skill-name>` → junction 到本 skill 的 `plugin/` 目录。
 `plugins/` 目录下的插件会被 OpenCode 自动加载，与 skill 的 junction 做法一致。
 
-> ⚠️ 踩坑记录：用 `opencode.jsonc` 的 `"plugins"` 条目引用 `./skills/vsl-synchron-player/plugin` **能加载**，
+> ⚠️ 踩坑记录：用 `opencode.jsonc` 的 `"plugins"` 条目引用 `<skill>/plugin` **能加载**，
 > 但重启后可能仍挂着**旧的编译缓存**（新加的工具不出现）；改用 `~/.config/opencode/plugins/` 自动发现后就正常了。
 > 另外 `plugins` 条目本身要求指向**目录**（直接写 `.ts` 会被 `configured plugin path must be a directory` 拒绝）。
 > 改了插件代码后：`opencode service restart`。
 
-**用户习惯**见 `references/user-habits.md`（例如：**CC58 切技法，每 8 个值一档**）——生成预设默认遵循。
-（该文件为**个人配置，已 gitignore，不随仓库发布**；新环境需自建。）
+**个人习惯 / 偏好**（控制器分配、分档步长、麦克风与摆位、命名规则、Tutti 增益、缺失 patch 口径…）
+**不随本仓库发布**：本地放在 `references/user-habits.md`（已 gitignore；新环境需自建），生成 / 克隆时默认遵循。
 
 ---
 
@@ -73,7 +73,8 @@ description: >-
 - **切换语义（实测）**：`parallel=false`（默认）= **单极硬切换**（按下的那一刻决定档位，按住期间拉控制器不变），
   切换点 = 该槽 `fadeOutStart..fadeOutEnd` 的**中点**；`parallel=true` = **渐变/叠加**，**按住时实时渐变**，
   渐变区间 = `nodeXFades` 的重叠区本身（面板显示即精确值）。
-  → 硬切"每 8 值一档"：中点落在 8/16/24…（`setXfades … "steps":8`），分档 `0–7 / 8–15 / …`，末档到 127。
+  → 硬切**分档步长是个人偏好**：用 `setXfades … "steps":N` 生成（`bounds = N*i−1`，末档到 127），
+    例如 `N=8` 得到分档 `0–7 / 8–15 / …`。具体步长见个人习惯文件。
 - **`.syvolume`** = `VINv` 魔数 + **明文 JSON 头**（含 `id`/`description`/`volumeRefs`）
   + 一个 **zstd 帧**（内容是该乐器卷的**完整 patch 树 + 工厂预设名清单**）。
 - **工厂预设本体拿不到**（实测结论）：卷里那个 zstd 帧只是一个**清单**（名字 → 编号；
@@ -86,7 +87,7 @@ description: >-
   `{ patches: { <Collection>: { <Product>: { <乐器文件夹>: { <技法>: { <patch文件>: index } } } } },
      instruments: { at.co.vsl.synchronplayer: { presets: {...} } } }`
 
-> 详细字段字典、语法、坑，见 `references/`（用户整理的中文长文档）。
+> 详细字段字典、语法、坑，见 `references/`（详尽中文长文档）。
 > 重要：**乐器文件夹前面的编号必须一起换**（1st=01/2nd=02/Vla=03/Vc=04/DB=05），只换
 > `1st Violins-14` 会得到不存在的 `01 SY 2nd Violins-10 Pro`。
 
@@ -103,7 +104,7 @@ description: >-
 
 ```powershell
 # 全量重建 ~95 s / 197 卷；之后增量刷新只要几秒（按 大小+mtime 跳过未变卷）
-powershell -ExecutionPolicy Bypass -File scripts/build-vsl-patch-db.ps1 -LibraryRoot "D:\VSL Library"
+powershell -ExecutionPolicy Bypass -File scripts/build-vsl-patch-db.ps1 -LibraryRoot "<你的库根>"
 # 改了库/想强制重扫：
 ... -Force
 ```
@@ -126,6 +127,7 @@ $db | Where-Object { $_.Collection -eq '02 Synchron Strings Pro' -and $_.Instrum
 4. **写 map JSON**（见 `examples/strings-pro-map.json`）：每条含 `name`、按顺序的
    `replacements`（`[from,to]`）、可选 `rangeSource`（从哪个预设抄音域）、可选
    `ranges`（逐 patch 覆盖音域）、`currentPreset`。
+   （示例里的名字与路径是**占位示例**，按自己的命名习惯与样例预设填。）
 5. **生成**：`scripts/generate-section-presets.ps1 -Template <本地模板> -MapFile <map> -OutDir <目录>`。
 6. **校验**：`scripts/verify-patch-paths.ps1 -Preset <生成物> -Database data/vsl-patches.csv`
    —— 要求 `NOT FOUND: 0`。
@@ -135,7 +137,7 @@ $db | Where-Object { $_.Collection -eq '02 Synchron Strings Pro' -and $_.Instrum
 
 ```powershell
 # 提取/更新 patch+preset 数据库
-scripts\build-vsl-patch-db.ps1 [-LibraryRoot "D:\VSL Library"] [-OutDir <默认 data>] [-Force]
+scripts\build-vsl-patch-db.ps1 [-LibraryRoot "<你的库根>"] [-OutDir <默认 data>] [-Force]
 
 # 由模板批量克隆到各声部（输出 .vsynpreset 或 .json root slot）
 scripts\generate-section-presets.ps1 -Template <x.vsynpreset|.json> -MapFile <map.json> -OutDir <dir>
@@ -157,7 +159,7 @@ scripts\verify-patch-paths.ps1 -Preset <x.vsynpreset> -Database data\vsl-patches
 - **音域 `rangeFrom/rangeTo` 各声部不同**，必须按目标声部改写（`rangeSource`/`ranges`），
   否则用官方做法删掉这些行让播放器回填。
 - 播放器内：**先 `Enable all slots` 再复制**；粘到**空白/已启用**的树；必要时**粘两次**修正音域。
-- **写入安全**：写盘脚本只写 `Generated/generated` 目录、默认不覆盖已存在文件（见上）。**永不覆盖手写预设。**
+- **写入安全**：写盘脚本只写 `Generated/generated` 目录、默认不覆盖已存在文件（见上）。
 - root slot / 预设**不含 mixer preset**（本库 mixer 与声部无关，但别库要留意）；需要时另加载 Mixer Preset。
 - 指向不存在的 patch 会报错——可在播放器里"删除含缺失 patch 的槽"清理。
 - **手工写 `.vsynpreset` 用的是 zstd raw block（合法但不压缩，约 117 KB/个）**；播放器用标准
@@ -177,7 +179,9 @@ scripts\verify-patch-paths.ps1 -Preset <x.vsynpreset> -Database data\vsl-patches
 
 ## 7. 参考与示例
 
-- `references/user-habits.md` —— **个人习惯（不入库）**：CC58 每 8 值一档切技法、家族前缀命名（STR/BRS/WW/PERC/ETH）等，生成时默认遵循
+- `references/user-habits.md` —— **个人习惯 / 偏好（不随仓库发布，已 gitignore）**：控制器分配、分档步长、
+  麦克风与摆位、命名规则、Tutti 增益、缺失 patch 口径等；生成时默认遵循。**新环境需自建**
+  （本机这份是指针文件，正文在个人工作区，见文件头）。
 - `references/VSL-root-slot-换patch-完全指南.md` —— 完整方法/语法/字段字典/坑（中文长文档）
 - `examples/strings-pro-map.json` —— 上面 5 声部的 map 配置示例（含低音 LyV→molto Vib 处理）
 - 其它库的乐器代码不统一（Elite `vi1/vi2/va/vc/db`、Dimension `vi/va/vc/db`、Brass `tp1/ho1/…`），
@@ -203,7 +207,7 @@ scripts\verify-patch-paths.ps1 -Preset <x.vsynpreset> -Database data\vsl-patches
 **仍需人工 / 做不到（已知边界）**
 
 - 工厂预设**本体**导出 → 私有编码，**只能**在播放器里 `Copy root slot` / 另存（见 §1）
-- **覆盖 / 删除**手写预设 → 设计上禁止
+- **覆盖 / 删除**既有预设 → 写盘脚本默认禁止（见上）
 - 播放器 GUI 操作：加载 / 保存预设、勾 `parallel`、`Enable all slots`、粘 root slot、设 Dim.Ctrl 来源
 - mixer 部分：可用 `setField` 改字段，但没有"加载 / 切换 Mixer Preset"的 op
 - 从零新建**空**预设：目前只能基于某个 shell 预设（`build_preset` 需要 shell）

@@ -1,37 +1,37 @@
 [
   {
-    "name": "STR Synchron Vln2 a10",
+    "name": "Vln2",
     "replacements": [
       ["violins1", "violins2"],
       ["01 SY 1st Violins-14", "02 SY 2nd Violins-10"],
       ["VI-14", "VI-10"]
     ],
-    "rangeSource": "C:\\Users\\Administrator\\Documents\\VSL\\Vienna Synchron Player\\Presets\\Strings\\STR Synchron Vln2 a10.vsynpreset",
-    "currentPreset": "Strings/STR Synchron Vln2 a10"
+    "rangeSource": "<…>\\Presets\\Strings\\Vln2.vsynpreset",
+    "currentPreset": "Strings/Vln2"
   },
   {
-    "name": "STR Synchron Vla a8",
+    "name": "Vla",
     "replacements": [
       ["violins1", "violas"],
       ["01 SY 1st Violins-14", "03 SY Violas-8"],
       ["VI-14", "VA-8"]
     ],
-    "rangeSource": "C:\\Users\\Administrator\\Documents\\VSL\\Vienna Synchron Player\\Presets\\Strings\\STR Synchron Vla a8.vsynpreset",
-    "currentPreset": "Strings/STR Synchron Vla a8"
+    "rangeSource": "<…>\\Presets\\Strings\\Vla.vsynpreset",
+    "currentPreset": "Strings/Vla"
   },
   {
-    "name": "STR Synchron Vc a8",
+    "name": "Vc",
     "replacements": [
       ["violins1", "cellos"],
       ["01 SY 1st Violins-14 Pro", "04 SY Violoncellos-8 Pro"],
       ["01 SY 1st Violins-14", "04 SY Cellos-8"],
       ["VI-14", "VC-8"]
     ],
-    "rangeSource": "C:\\Users\\Administrator\\Documents\\VSL\\Vienna Synchron Player\\Presets\\Strings\\STR Synchron Vc a8.vsynpreset",
-    "currentPreset": "Strings/STR Synchron Vc a8"
+    "rangeSource": "<…>\\Presets\\Strings\\Vc.vsynpreset",
+    "currentPreset": "Strings/Vc"
   },
   {
-    "name": "STR Synchron DB a6",
+    "name": "DB",
     "replacements": [
       ["violins1", "basses"],
       ["01 SY 1st Violins-14", "05 SY Double basses-6"],
@@ -39,8 +39,8 @@
       ["05 SY Double basses-6/A - FULL VELOCITIES/13F DB-6_Legato-LyV.vsynpatch", "05 SY Double basses-6 Pro/02 Legatos/31 DB-6 Legato molto Vib.vsynpatch"],
       ["13F DB-6_Legato-LyV", "31 DB-6 Legato molto Vib"]
     ],
-    "rangeSource": "C:\\Users\\Administrator\\Documents\\VSL\\Vienna Synchron Player\\Presets\\Strings\\STR Synchron DB a6.vsynpreset",
+    "rangeSource": "<…>\\Presets\\Strings\\DB.vsynpreset",
     "ranges": { "31 DB-6 Legato molto Vib": [23, 60] },
-    "currentPreset": "Strings/STR Synchron DB a6"
+    "currentPreset": "Strings/DB"
   }
 ]
